@@ -30,7 +30,7 @@ input {
   align-items: center; }
   #main #showVideo {
     margin-top: 10px; }
-  #main #problemInput {
+  #main #problemInput, #main #result {
     display: flex;
     align-items: center;
     flex-direction: column; }

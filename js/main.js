@@ -1,8 +1,9 @@
 const video = document.getElementById('video');
 const canvas = document.getElementById('cnv');
 const showVideoBtn = document.getElementById('showVideo');
-const problem = document.getElementById('problem');
-const calc = document.getElementById('calc');
+const problemInput = document.getElementById('problem');
+const calcBtn = document.getElementById('calc');
+const out = document.getElementById('output');
 
 const width = 560;
 const height = 400;
@@ -22,16 +23,16 @@ video.addEventListener('timeupdate', () => {
     ctx.drawImage(video, 0, 0, width, height);
 
     const im = cv.imread(canvas);
-    // TODO: detecting input
     if (true) {
         video.pause();
         video.classList.add('hidden');
 
-        problem.value = '2x - 3 = 0';
+        problemInput.value = '2x - 3 = 0';
     }
 });
 
-calc.addEventListener('click', () => {
-    const problem = problem.value;
+calcBtn.addEventListener('click', () => {
+    const problem = problemInput.value;
 
+    out.innerHTML = 'x = -3 / 2';
 });
