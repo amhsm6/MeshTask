@@ -26,16 +26,26 @@ button:focus {
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  #showVideo {
+    margin-top: 10px;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  #result {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+
+    h4 {
+
+    }
+  }
 }
 
 canvas {
-  display: none;
-}
-
-#showVideo {
-  margin-top: 10px;
-}
-
-.hidden {
   display: none;
 }
