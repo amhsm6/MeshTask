@@ -16,6 +16,6 @@ gulp.task('default', () => {
         server: "./"
     });
 
-    gulp.watch('./scss/*.scss', gulp.series('scss'));
+    gulp.watch('./scss/**/*.scss', gulp.series('scss'));
     gulp.watch('./*.html').on('change', browserSync.reload);
 });
