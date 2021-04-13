@@ -1,3 +1,9 @@
+@mixin column-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 body, html {
   width: 100%;
   height: 100%;
@@ -28,20 +34,21 @@ input {
   height: 30px;
 }
 
+.hidden {
+  display: none;
+}
+
 #main {
+  width: 60%;
   height: 500px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  @include column-center;
 
   #showVideo {
     margin-top: 10px;
   }
 
   #problemInput, #result {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
+    @include column-center;
   }
 
   #calc {
@@ -49,6 +56,16 @@ input {
   }
 }
 
-.hidden {
-  display: none;
+body {
+  display: flex;
+}
+
+#left {
+  width: 20%;
+  @include column-center;
+}
+
+#right {
+  width: 20%;
+  @include column-center;
 }
