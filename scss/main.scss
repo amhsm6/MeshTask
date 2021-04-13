@@ -1,0 +1,41 @@
+body, html {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+button {
+  border: 1px solid silver;
+  background: #afafaf;
+  border-radius: 25px;
+  padding: 15px;
+  transition: all .6s ease;
+}
+
+button:hover {
+  background: #eee;
+}
+
+button:focus {
+  outline: none;
+}
+
+#main {
+  height: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+canvas {
+  display: none;
+}
+
+#showVideo {
+  margin-top: 10px;
+}
+
+.hidden {
+  display: none;
+}

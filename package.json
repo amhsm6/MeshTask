@@ -1,0 +1,13 @@
+{
+  "name": "mesh_task",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "gulp"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "browser-sync": "^2.26.14",
+    "gulp": "^4.0.2",
+    "gulp-sass": "^4.1.0"
+  }
+}
