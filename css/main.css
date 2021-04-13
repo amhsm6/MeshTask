@@ -17,6 +17,12 @@ button:hover {
 button:focus {
   outline: none; }
 
+input {
+  border: 2px solid silver;
+  border-radius: 10px;
+  width: 500px;
+  height: 30px; }
+
 #main {
   height: 500px;
   display: flex;
@@ -24,12 +30,12 @@ button:focus {
   align-items: center; }
   #main #showVideo {
     margin-top: 10px; }
-  #main .hidden {
-    display: none; }
-  #main #result {
+  #main #problemInput {
     display: flex;
     align-items: center;
     flex-direction: column; }
+  #main #calc {
+    margin-top: 50px; }
 
-canvas {
+.hidden {
   display: none; }

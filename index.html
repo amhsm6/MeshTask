@@ -7,13 +7,17 @@
     <script src="https://docs.opencv.org/master/opencv.js"></script>
 </head>
 <body>
-    <canvas id="cnv"></canvas>
+    <canvas class="hidden" id="cnv"></canvas>
     <div id="main">
-        <video id="video"></video>
+        <video class="hidden" id="video"></video>
         <button id="showVideo">Begin video</button>
+        <div id="problemInput">
+            <h4>Input</h4>
+            <input id="problem">
+        </div>
+        <button id="calc">Calculate</button>
         <div id="result">
-            <h4>Read</h4>
-            <input id="in">
+
         </div>
     </div>
 
