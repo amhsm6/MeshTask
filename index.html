@@ -1,33 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>App</title>
-    <link rel="stylesheet" href="css/main.css">
-<!--    <script src="https://docs.opencv.org/master/opencv.js"></script>-->
-</head>
-<body>
-    <canvas class="hidden" id="cnv"></canvas>
-    <div id="left">
-        <h2>Content</h2>
-    </div>
-    <div id="main">
-        <video class="hidden" id="video"></video>
-        <button id="showVideo">Begin video</button>
-        <div id="problemInput">
-            <h4>Input</h4>
-            <input id="problem">
-        </div>
-        <button id="calc">Calculate</button>
-        <div id="result">
-            <h4>Result</h4>
-            <span id="output"></span>
-        </div>
-    </div>
-    <div id="right">
-        <h2>Content</h2>
-    </div>
+<html lang="ru">
+<meta charset="UTF-8">
+<title>App</title>
+<link rel="stylesheet" href="css/bulma.min.css">
+<link rel="stylesheet" href="css/main.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="js/main.js"></script>
+<!--    <script src="js/opencv.js"></script>-->
 
-    <script src="js/main.js"></script>
-</body>
+<canvas class="fullsize" id="cnv"></canvas>
+<video class="hidden" id="video"></video>
 </html>
