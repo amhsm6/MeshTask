@@ -1,10 +1,31 @@
-const video = document.getElementById('video');
-const canvas = document.getElementById('cnv');
-const showVideoBtn = document.getElementById('showVideo');
-const problemInput = document.getElementById('problem');
-const calcBtn = document.getElementById('calc');
-const out = document.getElementById('output');
+onload = async () => {
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('cnv');
 
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = 'red';
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    video.srcObject = stream;
+    video.play();
+  } catch (e) {
+    console.error(e);
+
+    const foo = document.createElement('p');
+    foo.style.position = 'absolute';
+    document.body.appendChild(foo);
+    foo.innerHTML = `${e.message}`;
+  }
+
+  video.addEventListener('timeupdate', () => {
+    ctx.drawImage(video, 0, 0, video.width, video.height); 
+  });
+}
+
+/*
 const width = 560;
 const height = 400;
 
@@ -36,3 +57,4 @@ calcBtn.addEventListener('click', () => {
 
     out.innerHTML = 'x = -3 / 2';
 });
+}*/
