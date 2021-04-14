@@ -22,8 +22,7 @@ async function drawMainScreen() {
   <div class="navbar-menu is-active">
     <div class="navbar-end">
       <div class="navbar-item">
-        <a id="CAMERAS_BUTTON">Cameras</a>
-
+        <a id="CAMERAS_BUTTON"><i class="big-font fa fa-video-camera"></i></a>
         </div>
       </div>
     </div>
@@ -92,43 +91,44 @@ async function processCamera(deviceId, ctx) {
   const { width, height } = video.srcObject.getVideoTracks()[0].getSettings();
   const ratio = width / height;
   
-  video.addEventListener('timeupdate', () => {
+  const callback = () => {
     ctx.drawImage(video, ctx.canvas.width / 2 - ratio * ctx.canvas.height / 2, 0, ratio * ctx.canvas.height, ctx.canvas.height);
-    const im = cv.imread(canvas);
+    const im = cv.imread(ctx.canvas);
 
-  });
+    const mask = new cv.Mat();
+    const low = new cv.Mat(im.rows, im.cols, im.type(), [150, 50, 50, 0]);
+    const high = new cv.Mat(im.rows, im.cols, im.type(), [255, 255, 255, 255]);
+    cv.inRange(im, low, high, mask);
+  
+    const contours = new cv.MatVector();
+    const hierarchy = new cv.Mat();
+    cv.findContours(mask, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
+
+    if (!contours.size() || true) { 
+      // let max_area_idx = 0;
+      // for (let i = 0; i < contours.size(); i++) {
+      //   if (cv.contourArea(contours[i]) > cv.contourArea(max_area_idx)) {
+      //     max_area_idx = i;
+      //   }
+      // }
+      video.pause();
+      showResult();
+    }
+  }
+
+  video.addEventListener('timeupdate', callback); 
 }
 
-/*
-const width = 560;
-const height = 400;
+function showResult() {
+  clearScreen();
 
-showVideoBtn.addEventListener('click', async () => {
-    try {
-        video.classList.remove('hidden');
-        video.srcObject = await navigator.mediaDevices.getUserMedia({ video: { width, height }, audio: false });
-        video.play();
-    } catch (e) {
-        console.error(e);
-    }
-});
-
-video.addEventListener('timeupdate', () => {
-    let ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, width, height);
-
-    const im = cv.imread(canvas);
-    if (true) {
-        video.pause();
-        video.classList.add('hidden');
-
-        problemInput.value = '2x - 3 = 0';
-    }
-});
-
-calcBtn.addEventListener('click', () => {
-    const problem = problemInput.value;
-
-    out.innerHTML = 'x = -3 / 2';
-});
-}*/
+  ROOT.innerHTML = `
+<nav class="navbar is-transparent my-nav">
+  <div class="navbar-brand">
+    <a style="margin-left: 20px; margin-top: 10px;" class "navbar-item" id="back"><i class="fa fa-times big-font"></i></a> 
+  </div>
+</nav>
+<div class="container"
+</div>
+  `;
+}

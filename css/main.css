@@ -18,3 +18,7 @@
 .my-panel {
   background: white;
 }
+
+.big-font {
+  font-size: 3rem!important;
+}
