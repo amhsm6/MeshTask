@@ -1,3 +1,7 @@
+html {
+  background: url('../assets/bg.png');
+}
+
 .hidden {
   display: none;
 }
@@ -20,7 +24,15 @@
 }
 
 .big-font {
-  font-size: 3rem!important;
+  font-size: 3rem;
+}
+
+.med-font {
+  font-size: 2rem;
+}
+
+.menu-separated {
+  margin-left: auto;
 }
 
 .logo {

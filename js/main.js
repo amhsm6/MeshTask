@@ -8,6 +8,9 @@ function clearScreen() {
 }
 
 
+let CTX = null;
+let CAMERAS_NOT_FOUND = false;
+
 async function drawMainScreen() {
   clearScreen();
 
@@ -17,42 +20,56 @@ async function drawMainScreen() {
     <a class="navbar-item" href="https://uchebnik.mos.ru">
       <img src="assets/logo.png" class="logo" alt="МЭШ">
     </a>
+    <div class="navbar-item menu-separated is-hidden-desktop">
+      <a class="about"><i class="big-font fa fa-question"></i></a>
+    </div>
+    <div class="navbar-item is-hidden-desktop">
+      <a class="cameras_button"><i class="big-font fa fa-video-camera"></i></a>
+    </div>
+
   </div>
 
-  <div class="navbar-menu is-active">
+
+  <div class="navbar-menu">
     <div class="navbar-end">
       <div class="navbar-item">
-        <a id="about"><i class="big-font fa fa-question"></i></a>
+        <a class="about"><i class="big-font fa fa-question"></i></a>
       </div>
       <div class="navbar-item">
-        <a id="CAMERAS_BUTTON"><i class="big-font fa fa-video-camera"></i></a>
+        <a class="cameras_button"><i class="big-font fa fa-video-camera"></i></a>
       </div>
     </div>
   </div>
+
 </nav>
 <div id="cameras_container" class="section container hidden"><div id="cameras" class="panel my-panel"></div></div>
-<canvas class="fullsize" id="cnv"></cnv>
+<canvas class="fullsize" id="cnv"></canvas>
 <video id="video" class="hidden"></video>
   `;
-
-  document.getElementById('about').addEventListener('click', () => showAbout())
 
   const canvas = document.getElementById('cnv');
   const cameras = document.getElementById('cameras');
   const camerasContainer = document.getElementById('cameras_container');
-  const camerasButton = document.getElementById('CAMERAS_BUTTON');
-  camerasButton.onclick = () => {
-    camerasContainer.classList.toggle('hidden');
-  };
 
-  canvas.width = canvas.clientWidth;
-  canvas.height = canvas.clientHeight;
-
-  const ctx = canvas.getContext('2d');
-
-  ctx.fillStyle = 'white';
-  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  for (const el of document.getElementsByClassName('about')) {
+    el.onclick = () => {
+      showAbout();
+    };
+  }
   
+  for (const el of document.getElementsByClassName('cameras_button')) {
+    el.onclick = () => {
+      camerasContainer.classList.toggle('hidden');
+    };
+  }
+
+
+  CTX = canvas.getContext('2d');
+  const ctx = CTX;
+  
+  processResize();
+  
+
   try {
     const devices = await navigator.mediaDevices.enumerateDevices();
     let idx = 1;
@@ -61,13 +78,13 @@ async function drawMainScreen() {
         cameras.insertAdjacentHTML(
           'beforeend', 
           `
-            <a id=${ device.deviceId } class="panel-block">
+            <a id="DEV_${device.deviceId}" class="panel-block">
               Camera ${ idx }
             </a>
           `
         );
         idx++;
-        document.getElementById(device.deviceId).addEventListener('click', async () => {
+        document.getElementById(`DEV_${device.deviceId}`).addEventListener('click', async () => {
           camerasContainer.classList.toggle('hidden'); 
           await processCamera(device.deviceId, ctx);
         });
@@ -78,12 +95,11 @@ async function drawMainScreen() {
     await processCamera(null, ctx);
   } catch (e) {
     console.error(e);
-
-    const foo = document.createElement('p');
-    foo.style.position = 'absolute';
-    document.body.appendChild(foo);
-    foo.innerHTML = `${e.message}`;
+    CAMERAS_NOT_FOUND = true;
+    processResize();
   }
+
+
 }
 
 async function processCamera(deviceId, ctx) {
@@ -95,73 +111,45 @@ async function processCamera(deviceId, ctx) {
   const ratio = width / height;
   
   const callback = () => {
-    ctx.drawImage(video, ctx.canvas.width / 2 - ratio * ctx.canvas.height / 2, 0, ratio * ctx.canvas.height, ctx.canvas.height);
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    //ctx.drawImage(video, ctx.canvas.width / 2 - ratio * ctx.canvas.height / 2, 0, ratio * ctx.canvas.height, ctx.canvas.height);
+    ctx.drawImage(video, 0, 0, ctx.canvas.width, ctx.canvas.height);
 
-    const rect = new cv.Rect(ctx.canvas.width / 2 - ratio * ctx.canvas.height / 2, 0, ratio * ctx.canvas.height, ctx.canvas.height);
-    const im = cv.imread(ctx.canvas).roi(rect);
-
-    const mask = new cv.Mat();
-    const low = new cv.Mat(im.rows, im.cols, im.type(), [100, 100, 200, 0]);
-    const high = new cv.Mat(im.rows, im.cols, im.type(), [255, 255, 255, 255]);
-    cv.inRange(im, low, high, mask);
-  
-    const contours = new cv.MatVector();
-    const hierarchy = new cv.Mat();
-    cv.findContours(mask, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
-
-    if (contours.size()) {
-      im.delete();
-      mask.delete();
-      low.delete();
-      high.delete();
-      hierarchy.delete();
-      contours.delete();
-
-      video.pause();
-      showResult();
-    }
+    const foundSomething = false;
+    
+    if (foundSomething) { showResult(); }
   }
 
-  video.addEventListener('timeupdate', callback); 
+  video.ontimeupdate = () => { 
+    try { callback(); }
+    catch (err) {
+      ctx.fillStyle = 'red';
+      ctx.font = '12px serif';
+      ctx.fillText(err.message, 50, 100);
+    }
+  };
 }
 
 function showResult() {
-  clearScreen();
-
-  ROOT.innerHTML = `
-<nav class="navbar is-transparent my-nav">
-  <div class="navbar-brand">
-    <a class="navbar-item" href="https://uchebnik.mos.ru">
-      <img src="assets/logo.png" class="logo" alt="МЭШ">
-    </a>
-  </div>
-
-  <div class="navbar-menu is-active">
-    <div class="navbar-end">
-      <div class="navbar-item">
-        <a class="navbar-item" id="back"><i class="fa fa-times big-font"></i></a>
-      </div>
-    </div>
-  </div>
-</nav>
-<div class="container">
-  <div class="section" style="width: 60%; margin-left: 20%">
-    <div class="notification is-primary">
-      <h2 style="text-align: center">2x - 3 = 0</h2>
-    </div>
-  </div>
-  <div class="section">
-    <div class="notification is-primary">
-      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Deleniti in natus nulla placeat. Ab aliquam aliquid assumenda at aut autem cum cupiditate, debitis eum ex fuga hic inventore iure iusto laboriosam libero maiores mollitia nam natus nesciunt nobis odio officia perspiciatis quam quasi quisquam quos rerum sint tempora temporibus veritatis voluptate voluptatem voluptates. Accusamus autem deserunt dolor eligendi excepturi fugiat ipsam, iure labore minima molestias nobis perspiciatis porro qui quisquam, ullam veritatis, voluptatum. Deleniti error iste minus officiis quo quod tempora tenetur unde vitae! Aliquam deleniti magnam nesciunt nisi praesentium quis repellendus sed similique sit voluptatibus. Eveniet id minus modi?</p>
-    </div>
-  </div>
-</div>
-  `;
-
-  document.getElementById('back').addEventListener('click', () => drawMainScreen());
+  showInfo()
 }
 
 function showAbout() {
+  showInfo( el => el.innerHTML = `
+<div class="content">
+  <h2>Инструкция по использования</h2>
+  <ul>
+    <li>При необходимости выберите правильную камеру</li>
+    <li>Наведите экран на уравнение (сейчас &mdash; синее пятно)</li>
+    <li>Поздравляем: Вы &mdash; молодец!</li>
+  </ul>
+</div>` );
+}
+
+
+
+function showInfo(setup) {
   clearScreen();
 
   ROOT.innerHTML = `
@@ -170,24 +158,60 @@ function showAbout() {
     <a class="navbar-item" href="https://uchebnik.mos.ru">
       <img src="assets/logo.png" class="logo" alt="МЭШ">
     </a>
+    <div class="navbar-item menu-separated is-hidden-desktop">
+      <a class="navbar-item back_button"><i class="fa fa-times med-font"></i></a>
+    </div>
   </div>
-
-  <div class="navbar-menu is-active">
+  
+  <div class="navbar-menu">
     <div class="navbar-end">
       <div class="navbar-item">
-        <a class="navbar-item" id="back"><i class="fa fa-times big-font"></i></a>
+        <a class="navbar-item back_button"><i class="fa fa-times med-font"></i></a>
       </div>
     </div>
   </div>
+
 </nav>
 <div class="container">
   <div class="section">
-    <div class="notification is-primary">
-      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Deleniti in natus nulla placeat. Ab aliquam aliquid assumenda at aut autem cum cupiditate, debitis eum ex fuga hic inventore iure iusto laboriosam libero maiores mollitia nam natus nesciunt nobis odio officia perspiciatis quam quasi quisquam quos rerum sint tempora temporibus veritatis voluptate voluptatem voluptates. Accusamus autem deserunt dolor eligendi excepturi fugiat ipsam, iure labore minima molestias nobis perspiciatis porro qui quisquam, ullam veritatis, voluptatum. Deleniti error iste minus officiis quo quod tempora tenetur unde vitae! Aliquam deleniti magnam nesciunt nisi praesentium quis repellendus sed similique sit voluptatibus. Eveniet id minus modi?</p>
-    </div>
+    <div id="info_element" class="notification is-primary"></div>
   </div>
 </div>
   `;
 
-  document.getElementById('back').addEventListener('click', () => drawMainScreen());
+  for (const el of document.getElementsByClassName('back_button')) {
+    el.onclick = () => {
+      drawMainScreen();
+    };
+  }
+
+  setup(document.getElementById('info_element'));
 }
+
+
+
+function processResize() {
+  const canvas = document.getElementById('cnv');
+  if (!canvas) { return; }
+
+  canvas.width = canvas.clientWidth;
+  canvas.height = canvas.clientHeight;
+
+  if (CTX) { initCanvas(); }
+}
+
+onresize = () => { processResize(); };
+
+
+
+function initCanvas() {
+  CTX.fillStyle = 'white';
+  CTX.fillRect(0, 0, CTX.canvas.width, CTX.canvas.height);
+  
+  if (CAMERAS_NOT_FOUND) {
+    CTX.fillStyle = 'red';
+    CTX.font = '48px serif';
+    CTX.fillText('Камер не обнаружено!', 50, 100);
+  }
+}
+
