@@ -15,7 +15,7 @@ async function drawMainScreen() {
 <nav class="navbar is-transparent my-nav">
   <div class="navbar-brand">
     <a class="navbar-item" href="https://uchebnik.mos.ru">
-      МЭШ
+      <img src="assets/logo.png" class="logo" alt="МЭШ">
     </a>
   </div>
 
@@ -132,7 +132,7 @@ function showResult() {
 <nav class="navbar is-transparent my-nav">
   <div class="navbar-brand">
     <a class="navbar-item" href="https://uchebnik.mos.ru">
-      МЭШ
+      <img src="assets/logo.png" class="logo" alt="МЭШ">
     </a>
   </div>
 
@@ -168,7 +168,7 @@ function showAbout() {
 <nav class="navbar is-transparent my-nav">
   <div class="navbar-brand">
     <a class="navbar-item" href="https://uchebnik.mos.ru">
-      МЭШ
+      <img src="assets/logo.png" class="logo" alt="МЭШ">
     </a>
   </div>
 

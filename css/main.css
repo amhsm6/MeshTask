@@ -6,8 +6,8 @@
   width: 100%;
   height: 100%;
   position: absolute;
-  top: 0px;
-  left: 0px;
+  top: 0;
+  left: 0;
   z-index: -1;
 }
 
@@ -21,4 +21,10 @@
 
 .big-font {
   font-size: 3rem!important;
+}
+
+.logo {
+  max-height: 50px!important;
+  height: 50px;
+  width: auto;
 }
