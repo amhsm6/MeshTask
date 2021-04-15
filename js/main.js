@@ -58,8 +58,29 @@ async function drawMainScreen() {
   }
   
   for (const el of document.getElementsByClassName('cameras_button')) {
-    el.onclick = () => {
-      camerasContainer.classList.toggle('hidden');
+    el.onclick = async () => {
+      cameras.innerHTML = '';
+
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      let idx = 1;
+
+      devices.forEach((device) => {
+        if (device.kind === 'videoinput') {
+          const button = document.createElement('a');
+          button.id = `DEV_${device.deviceId}`;
+          button.className = 'panel-block';
+          button.innerHTML = `Камера №${idx}`;
+          idx++;
+          button.onclick = async () => {
+            camerasContainer.classList.toggle('hidden', true); 
+            try { await processCamera(device.deviceId, ctx); }
+            catch (err) { document.body.innerHTML = `${err.message}`; }
+          };
+          cameras.appendChild(button);
+        }
+      });
+
+      camerasContainer.classList.toggle('hidden', idx == 1); 
     };
   }
 
@@ -71,27 +92,6 @@ async function drawMainScreen() {
   
 
   try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    let idx = 1;
-    devices.forEach((device) => {
-      if (device.kind === 'videoinput') {
-        cameras.insertAdjacentHTML(
-          'beforeend', 
-          `
-            <a id="DEV_${device.deviceId}" class="panel-block">
-              Camera ${ idx }
-            </a>
-          `
-        );
-        idx++;
-        document.getElementById(`DEV_${device.deviceId}`).addEventListener('click', async () => {
-          camerasContainer.classList.toggle('hidden'); 
-          await processCamera(device.deviceId, ctx);
-        });
-      }
-    });
-
-
     await processCamera(null, ctx);
   } catch (e) {
     console.error(e);
@@ -102,23 +102,39 @@ async function drawMainScreen() {
 
 }
 
+
 async function processCamera(deviceId, ctx) {
-  const stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId }, audio: false });
+  const videoMode = deviceId === null 
+    ? { facingMode: 'environment' }
+    : { deviceId: { exact: deviceId } };
+
+  const video = document.getElementById("video");
+  if (video.srcObject) {
+    video.srcObject.getVideoTracks().forEach(track => track.stop());
+  }
+
+  const stream = await navigator.mediaDevices.getUserMedia({ 
+      video: videoMode, 
+      audio: false 
+  });
+
+
   video.srcObject = stream;
   video.play();
 
-  const { width, height } = video.srcObject.getVideoTracks()[0].getSettings();
-  const ratio = width / height;
-  
+  processResize();
+
   const callback = () => {
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     //ctx.drawImage(video, ctx.canvas.width / 2 - ratio * ctx.canvas.height / 2, 0, ratio * ctx.canvas.height, ctx.canvas.height);
     ctx.drawImage(video, 0, 0, ctx.canvas.width, ctx.canvas.height);
 
-    const foundSomething = false;
+    const foundSomething = analyzePhoto(
+      ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height)
+    );
     
-    if (foundSomething) { showResult(); }
+    if (foundSomething) { showResult(foundSomething); }
   }
 
   video.ontimeupdate = () => { 
@@ -131,8 +147,56 @@ async function processCamera(deviceId, ctx) {
   };
 }
 
+
+function analyzePhoto(photo) {
+    const rr = 12000;
+    const threshold = 0.15;
+
+    const { width, height, data } = photo;
+
+    const r = 37;
+    const g = 100;
+    const b = 200;
+
+    const size = width * height;
+
+    let total = 0;
+
+    for (let i = 0; i < size; i += 4) {
+        const myR = data[i+0];
+        const myG = data[i+1];
+        const myB = data[i+2];
+
+        const dr = myR - r;
+        const dg = myG - g;
+        const db = myB - b;
+       
+        const dd = dr*dr + dg*dg + db*db;
+
+        if (dd < rr) { total += 1; }
+    }
+
+    if (total > threshold * size) { return {}; }
+
+    return null;
+}
+
+
+
 function showResult() {
-  showInfo()
+  showInfo( el => {
+    el.innerHTML = `
+<div class="content">
+  <h3>Вы навели камеру на уравнение</h3>
+
+  <input type="text" value="x^2+3x+2=0">
+
+  <h3>Оно решается так</h3>
+
+  <p>Берёте и решаете!</p>
+</div>
+    `;
+  });
 }
 
 function showAbout() {
@@ -185,7 +249,7 @@ function showInfo(setup) {
     };
   }
 
-  setup(document.getElementById('info_element'));
+  if (setup) { setup(document.getElementById('info_element')); }
 }
 
 
@@ -194,8 +258,16 @@ function processResize() {
   const canvas = document.getElementById('cnv');
   if (!canvas) { return; }
 
-  canvas.width = canvas.clientWidth;
-  canvas.height = canvas.clientHeight;
+  const video = document.getElementById('video');
+
+  if (!video.srcObject) {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+  } else {
+    const { width, height } = video.srcObject.getVideoTracks()[0].getSettings();
+    canvas.width = width;
+    canvas.height = height;
+  }
 
   if (CTX) { initCanvas(); }
 }
