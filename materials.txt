@@ -1,5 +1,0 @@
-https://www.westernsydney.edu.au/icns/reproducible_research/publication_support_materials/emnist
-https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js
-https://www.researchgate.net/publication/331617158_Recognition_and_Solution_for_Handwritten_Equation_Using_Convolutional_Neural_Network
-https://github.com/tensorflow/tfjs/tree/master/tfjs-converter
-LoadLayersModel
