@@ -4,8 +4,8 @@
   "scripts": {
     "start": "gulp"
   },
-  "license": "ISC",
   "dependencies": {
+    "@tensorflow/tfjs": "^3.4.0",
     "browser-sync": "^2.26.14",
     "gulp": "^4.0.2"
   }
