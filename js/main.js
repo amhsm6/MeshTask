@@ -53,7 +53,7 @@ async function drawMainScreen() {
             showAbout();
         };
     }
-    
+
     for (const el of document.getElementsByClassName('cameras_button')) {
         el.onclick = async () => {
             cameras.innerHTML = '';
@@ -144,27 +144,29 @@ function findLetters(photo) {
     const { width, height, data } = photo;
     const size = width * height;
 
+    const bw_image = [];
     for (let i = 0; i < size; i += 4) {
         const [r, g, b] = [data[i], data[i + 1], data[i + 2]];
         if (r > min[0] && r < max[0] && g > min[1] && g < max[1] && b > min[1] && b < max[1]) {
-            data[i] = 255;
-            data[i + 1] = 255;
-            data[i + 2] = 255;
+            bw_image.push(255);
         } else {
-            data[i] = 0;
-            data[i + 1] = 0;
-            data[i + 2] = 0;
+            bw_image.push(0);
         }
     }
 
+    const ctrs = [];
     let x = 0, y = 0;
     while (y <= height) {
-        const r1 = data[x];
-        const r2 = data[x + 4];
-        const r3 = data[x + y * width];
-        const r4 = data[x + y * width + 4];
+        const px1 = bw_image[x];
+        const px2 = bw_image[x + 1];
+        const px3 = bw_image[y * width + x];
+        const px4 = bw_image[y * width + x + 1];
 
-        x += 8;
+        if (px1 == 255) {
+
+        }
+
+        x += 2;
         if (x >= width) {
             x = 0;
             y += 2;
