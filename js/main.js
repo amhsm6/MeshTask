@@ -1,4 +1,7 @@
+const MODEL = null;
+
 onload = async () => {
+	MODEL = tf.LoadLayersModel('model.h5');
     await drawMainScreen(); 
 }
 
@@ -137,76 +140,160 @@ async function processCamera(deviceId, ctx) {
     };
 }
 
-function findLetters(photo) {
-    const min = [150, 50, 50];
-    const max = [150, 50, 50];
-
-    const { width, height, data } = photo;
+function in_range(min, max, photo) {
+	const { width, height, data } = photo;
     const size = width * height;
 
-    const bw_image = [];
-    for (let i = 0; i < size; i += 4) {
+    const mask = [];
+    for (let i = 0; i < 4*size; i += 4) {
         const [r, g, b] = [data[i], data[i + 1], data[i + 2]];
-        if (r > min[0] && r < max[0] && g > min[1] && g < max[1] && b > min[1] && b < max[1]) {
-            bw_image.push(255);
+
+		if (r > min[0] && r <= max[0] && 
+		    g > min[1] && g <= max[1] && 
+			b > min[2] && b <= max[2]) {
+            mask.push(255);
         } else {
-            bw_image.push(0);
+            mask.push(0);
         }
     }
 
-    const ctrs = [];
-    let x = 0, y = 0;
-    while (y <= height) {
-        const px1 = bw_image[x];
-        const px2 = bw_image[x + 1];
-        const px3 = bw_image[y * width + x];
-        const px4 = bw_image[y * width + x + 1];
+	return mask;
+}
 
-        if (px1 == 255) {
+function findLetters(photo) {
+   	const min = [0, 0, 0];
+    const max = [255, 255, 255];
 
-        }
+	const bw_image = in_range(min, max, photo);
 
-        x += 2;
-        if (x >= width) {
-            x = 0;
-            y += 2;
-        }
-    }
+	const { width, height } = photo;
+	const size = width*height;
 
-    // const rr = 12000;
-    // const threshold = 0.15;
-    //
-    // const r = 37;
-    // const g = 100;
-    // const b = 200;
-    //
-    // const size = width * height;
-    //
-    // let total = 0;
-    //
-    // for (let i = 0; i < size; i += 4) {
-    //     const myR = data[i];
-    //     const myG = data[i+1];
-    //     const myB = data[i+2];
-    //
-    //     const dr = myR - r;
-    //     const dg = myG - g;
-    //     const db = myB - b;
-    //
-    //     const dd = dr*dr + dg*dg + db*db;
-    //
-    //     if (dd < rr) { total += 1; }
-    // }
-    //
-    // if (total > threshold * size) { return {}; }
-    //
-    // return null;
+	const components = new Map();
+	const unprocessed = [];
 
-    return [{ x: 0, y: 0, width: 50, height: 50 }, { x: 200, y: 200, width: 200, height: 200 }]
+	const toI = (x,y) => { if (x < 0 || x >= width || y < 0 || y >= height) { throw null; } return width*y + x; };
+	const get = (x,y) => y === undefined ? bw_image[x] : bw_image[toI(x,y)];
+	const toXY = i => [i%width, Math.floor(i/width)];
+
+	for (let i = 0; i < size; i++) { if (get(i) > 0) { unprocessed.push(i); components.set(i, 0); } }
+
+	let componentNum = 0;
+	while (unprocessed.length > 0) {
+		componentNum += 1;
+
+		const queue = [unprocessed.pop()];
+
+		// START DFS
+		while (queue.length > 0) {
+			const i = queue.pop();
+	
+			const component = components.get(i);
+			if (component === undefined) { continue; } // цвет чёрный
+			if (component > 0) { continue; }           // мы там были
+
+			components.set(i, componentNum);
+			
+
+			const [x,y] = toXY(i);
+
+			const neighbors = [ 
+				[x-1,y-1], [x,y-1], [x+1,y-1], 
+				[x-1,y], /*[x,y],*/ [x+1,y], 
+				[x-1,y+1], [x,y+1], [x+1,y+1], 
+			];
+
+			for (const [nx, ny] of neighbors) {
+				try { queue.push(toI(nx, ny)); } catch(err){}
+			}
+		} // END DFS
+	}
+
+	const result = new Map();
+
+	for (const [i, n] of components) {
+		let array = result.get(n);
+		if (array === undefined) { array = []; result.set(n, array); }
+		array.push(toXY(i));
+	}
+
+	for (const [i, ctr] of resut) {
+		CTX.fillStyle = 'black';
+		CTX.fillRect(0, 0, CTX.canvas.width, CTX.canvas.height);
+		CTX.fillStyle = 'white';
+
+		let minx, maxx, miny, maxy;
+		for (const p of ctr) {
+			minx = Math.min(minx, p[0]);
+			maxx = Math.max(maxx, p[0]);
+			miny = Math.min(miny, p[1]);
+			maxy = Math.max(maxy, p[1]);
+
+			CTX.fillRect(p[0], p[1], 1, 1);
+		}
+
+		const { data } = CTX.getImageData(0, 0, CTX.canvas.width, CTX.canvas.height);
+		const letter = [];
+		let i = toI(minx, miny);
+		while (i <= toI(maxx, maxy)) {
+			letter.push(data[i] > 0 ? 1 : 0)
+
+			i += 4;
+		}
+	}
+}
+
+function decode(prediction) {
+	return 0;
 }
 
 function analyzePhoto(photo) {
     const letters = findLetters(photo);
+	const gray_img = to_gray(photo);
+	
+	const letters_res = []
+	for ([s_x, s_y, w, h] of letters) {
+		const letter = [];
+		let x = s_x, y = s_y;
+		for (let i = 0; i < w * h; i++) {
+			letter.push(gray_img[y * width + x]);
+
+			x += 1;
+        	if (x >= w) {
+            	x = s_x;
+           		y += 1;
+        	}
+		}
+
+		letters_res.push(decode(MODEL.predict(tf.tensor(letter))));
+	}
+
+	let a = 0, b = 0, c = 0, op = null;
+	for (let i = 0; i < letters_res.size(); i++) {
+		if (letters_res[i] == 'x') {
+			const k_arr = [];
+			for (let j = i; j >= 0; j--) {
+				k_arr.unshift(letters_res[j]);
+			}
+
+			if (k_arr) {
+				a = Number.parseInt(k_arr.join());
+			}
+		else if (letters_res[i] = '+' | letters_res[i] == '-') {
+		 	op = letters_res[i];
+
+			const k_arr = [];
+			let j = i + 1;
+			while (letters_res[j] != '=' && j < letters_res.size()) {
+				k_arr.push(letters_res[j]);
+				j++;
+			}
+
+			if (k_arr) {
+				b = Number.parseInt(k_arr.join());
+			}
+		}
+	}
 }
 
 function showResult() {
@@ -310,3 +397,4 @@ function initCanvas() {
         CTX.fillText('Камер не обнаружено!', 50, 100);
     }
 }
+
