@@ -1,5 +1,6 @@
 html {
   background: url('../assets/bg.png');
+  background-color: red;
 }
 
 .hidden {

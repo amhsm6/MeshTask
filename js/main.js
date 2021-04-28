@@ -1,7 +1,7 @@
 const MODEL = null;
 
 onload = async () => {
-	MODEL = tf.LoadLayersModel('model.h5');
+	//MODEL = tf.LoadLayersModel('model.h5');
     await drawMainScreen(); 
 }
 
@@ -74,7 +74,7 @@ async function drawMainScreen() {
                     button.onclick = async () => {
                         camerasContainer.classList.toggle('hidden', true); 
                         try { await processCamera(device.deviceId, ctx); }
-                        catch (err) { document.body.innerHTML = `${err.message}`; }
+                        catch (err) { document.body.innerHTML = `${err.message}`; console.error(err); }
                     };
                     cameras.appendChild(button);
                 }
@@ -133,7 +133,8 @@ async function processCamera(deviceId, ctx) {
     video.ontimeupdate = () => { 
         try { callback(); }
         catch (err) {
-            ctx.fillStyle = 'red';
+            console.error(err);
+			ctx.fillStyle = 'red';
             ctx.font = '12px serif';
             ctx.fillText(err.message, 50, 100);
         }
@@ -217,7 +218,8 @@ function findLetters(photo) {
 		array.push(toXY(i));
 	}
 
-	for (const [i, ctr] of resut) {
+	const letters = [];
+	for (const [i, ctr] of result) {
 		CTX.fillStyle = 'black';
 		CTX.fillRect(0, 0, CTX.canvas.width, CTX.canvas.height);
 		CTX.fillStyle = 'white';
@@ -236,10 +238,12 @@ function findLetters(photo) {
 		const letter = [];
 		let i = toI(minx, miny);
 		while (i <= toI(maxx, maxy)) {
-			letter.push(data[i] > 0 ? 1 : 0)
+			letter.push(data[i] > 0 ? 1 : 0);
 
 			i += 4;
 		}
+
+		letters.push(letter);
 	}
 }
 
@@ -249,22 +253,9 @@ function decode(prediction) {
 
 function analyzePhoto(photo) {
     const letters = findLetters(photo);
-	const gray_img = to_gray(photo);
 	
 	const letters_res = []
-	for ([s_x, s_y, w, h] of letters) {
-		const letter = [];
-		let x = s_x, y = s_y;
-		for (let i = 0; i < w * h; i++) {
-			letter.push(gray_img[y * width + x]);
-
-			x += 1;
-        	if (x >= w) {
-            	x = s_x;
-           		y += 1;
-        	}
-		}
-
+	for (const letter of letters) {
 		letters_res.push(decode(MODEL.predict(tf.tensor(letter))));
 	}
 
@@ -272,14 +263,14 @@ function analyzePhoto(photo) {
 	for (let i = 0; i < letters_res.size(); i++) {
 		if (letters_res[i] == 'x') {
 			const k_arr = [];
-			for (let j = i; j >= 0; j--) {
+			for (let j = i - 1; j >= 0; j--) {
 				k_arr.unshift(letters_res[j]);
 			}
 
-			if (k_arr) {
+			if (k_arr.length) {
 				a = Number.parseInt(k_arr.join());
 			}
-		else if (letters_res[i] = '+' | letters_res[i] == '-') {
+		} else if (letters_res[i] = '+' | letters_res[i] == '-') {
 		 	op = letters_res[i];
 
 			const k_arr = [];
@@ -289,11 +280,22 @@ function analyzePhoto(photo) {
 				j++;
 			}
 
-			if (k_arr) {
+			if (k_arr.length) {
 				b = Number.parseInt(k_arr.join());
+			}
+		} else if (letters_res[i] == '=') {
+			const k_arr = [];
+			for (let j = i + 1; j >= 0; j--) {
+				k_arr.push(letters_res[j]);
+			}
+
+			if (k_arr.length) {
+				c = Number.parseInt(k_arr.join());
 			}
 		}
 	}
+
+	console.log(a, b, c, op);
 }
 
 function showResult() {
@@ -397,4 +399,3 @@ function initCanvas() {
         CTX.fillText('Камер не обнаружено!', 50, 100);
     }
 }
-
